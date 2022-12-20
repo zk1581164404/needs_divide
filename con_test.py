@@ -33,6 +33,12 @@ Y_onehot = np_utils.to_categorical(Y_encoded)
 # 划分训练集，测试集
 X_train, X_test, Y_train, Y_test = train_test_split(X, Y_onehot, test_size=0.3, random_state=0)
 
+test_bound = len(X_train)
+valid_bound = int(test_bound * 0.8)
+data_size = len(Y)
+
+print(test_bound,valid_bound,data_size)
+
 # 定义神经网络
 def baseline_model():
     model = Sequential()
@@ -174,12 +180,12 @@ ax.xaxis.set_major_locator(x_major_locator)
 plt.show()
 p1= model.predict(X_train)
 print("p1.size == ",len(p1))
-#验证集相关
-plt.plot(np.argmax(p1[:26],1),color='red', label='prediction on training samples')
+#验证集相关  这里都改成超参数吧
+plt.plot(np.argmax(p1[:valid_bound],1),color='red', label='prediction on training samples')
 # x = np.array(range(848,1060))
-x = np.array(range(26,33))   #数据集的数据维度  需要自己更改一下
+x = np.array(range(valid_bound,test_bound))   #数据集的数据维度  需要自己更改一下
 
-plt.plot(x,np.argmax(p1[26:33],1),color = 'magenta',label ='prediction on validating samples')
+plt.plot(x,np.argmax(p1[valid_bound:test_bound],1),color = 'magenta',label ='prediction on validating samples')
 plt.plot(np.argmax(Y_train,1),color='blue', label='Y_train')
 
 plt.xlabel('No. of Trading Days')
@@ -202,20 +208,14 @@ Y = np.concatenate((np.argmax(Y_train,1),np.argmax(Y_test,1)),axis = 0)
 P = np.concatenate((np.argmax(p1,1),np.argmax(p,1)),axis = 0)
 #plotting the complete Y set with predicted values on x_train and x_test(variable p1 & p respectively given above)
 #for 
-plt.plot(P[:33],color='red', label='prediction on training samples')
+plt.plot(P[:test_bound],color='red', label='prediction on training samples')
 #for validating samples
-z = np.array(range(26,33))
-plt.plot(z,P[26:33],color = 'black',label ='prediction on validating samples')
+z = np.array(range(valid_bound,test_bound))
+plt.plot(z,P[valid_bound:test_bound],color = 'black',label ='prediction on validating samples')
 # #for testing samples
-x = np.array(range(33,48))
-plt.plot(x,P[33:48],color = 'green',label ='prediction on testing samples(x_test)')
+x = np.array(range(test_bound,data_size))
+plt.plot(x,P[test_bound:data_size],color = 'green',label ='prediction on testing samples(x_test)')
 
-
-z = np.array(range(26,33))
-plt.plot(z,P[26:33],color = 'black',label ='prediction on validating samples')
-#for testing samples
-x = np.array(range(33,48))
-plt.plot(x,P[33:48],color = 'green',label ='prediction on testing samples(x_test)')
 
 plt.plot(Y,color='blue', label='Y')
 plt.legend(loc='upper left')
