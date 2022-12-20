@@ -191,6 +191,41 @@ fig.set_size_inches(20,10)
 plt.show()
 
 
+from sklearn.metrics import mean_absolute_error
+
+print('Trainscore RMSE \tTrain Mean abs Error \tTestscore Rmse \t Test Mean abs Error')
+print('%.9f \t\t %.9f \t\t %.9f \t\t %.9f' % (math.sqrt(trainScore[0]),trainScore[1],math.sqrt(testScore[0]),testScore[1]))
+
+#  训练集、验证集、测试集 之间的比较
+
+Y = np.concatenate((np.argmax(Y_train,1),np.argmax(Y_test,1)),axis = 0)
+P = np.concatenate((np.argmax(p1,1),np.argmax(p,1)),axis = 0)
+#plotting the complete Y set with predicted values on x_train and x_test(variable p1 & p respectively given above)
+#for 
+plt.plot(P[:33],color='red', label='prediction on training samples')
+#for validating samples
+z = np.array(range(26,33))
+plt.plot(z,P[26:33],color = 'black',label ='prediction on validating samples')
+# #for testing samples
+x = np.array(range(33,48))
+plt.plot(x,P[33:48],color = 'green',label ='prediction on testing samples(x_test)')
+
+
+z = np.array(range(26,33))
+plt.plot(z,P[26:33],color = 'black',label ='prediction on validating samples')
+#for testing samples
+x = np.array(range(33,48))
+plt.plot(x,P[33:48],color = 'green',label ='prediction on testing samples(x_test)')
+
+plt.plot(Y,color='blue', label='Y')
+plt.legend(loc='upper left')
+fig = plt.gcf()
+fig.set_size_inches(20,12)
+plt.show()
+
+loss_and_metrics = model.evaluate(X_test, Y_test, batch_size=64)
+print('## evaluation loss and metrics ##')
+print(loss_and_metrics)
 
 
 
