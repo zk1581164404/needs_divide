@@ -21,7 +21,8 @@ feature_size = 5
 
 # 载入数据
 # df = pd.read_csv("数据集-用做分类.csv")
-df = pd.read_csv("data_test.csv")
+df = pd.read_csv("data.csv")   #读取时默认把第一行当做属性
+print("df_size : ",len(df))
 X = np.expand_dims(df.values[:, :-1].astype(float), axis=2)
 Y = df.values[:, feature_size]
  
@@ -43,13 +44,13 @@ print(test_bound,valid_bound,data_size)
 def baseline_model():
     model = Sequential()
     model.add(Conv1D(16, 1, input_shape=(feature_size, 1)))
-    model.add(Conv1D(16, 1, activation='tanh'))
+    model.add(Conv1D(16, 1, activation='relu'))
     model.add(MaxPooling1D(1))
-    model.add(Conv1D(16, 1, activation='tanh'))
-    model.add(Conv1D(16, 1, activation='tanh'))
+    model.add(Conv1D(16, 1, activation='relu'))
+    model.add(Conv1D(16, 1, activation='relu'))
     model.add(MaxPooling1D(1))
-    model.add(Conv1D(16, 1, activation='tanh'))
-    model.add(Conv1D(16, 1, activation='tanh'))
+    model.add(Conv1D(16, 1, activation='relu'))
+    model.add(Conv1D(16, 1, activation='relu'))
     model.add(MaxPooling1D(1))
     model.add(Flatten())
     model.add(Dense(5, activation='softmax'))
@@ -57,22 +58,6 @@ def baseline_model():
     print(model.summary())
     model.compile(loss='categorical_crossentropy',optimizer='adam', metrics=['accuracy'])
     return model
-    # model = Sequential()
-    # model.add(Conv1D(16, 1, input_shape=(feature_size, 1)))
-    # model.add(Conv1D(16, 1, activation='tanh'))
-    # model.add(MaxPooling1D(1))
-    # model.add(Conv1D(16, 1, activation='tanh'))
-    # model.add(Conv1D(16, 1, activation='tanh'))
-    # model.add(MaxPooling1D(1))
-    # model.add(Conv1D(16, 1, activation='tanh'))
-    # model.add(Conv1D(16, 1, activation='tanh'))
-    # model.add(MaxPooling1D(1))
-    # model.add(Flatten())
-    # model.add(Dense(5, activation='softmax'))
-    # plot_model(model, to_file='./model_classifier.png', show_shapes=True)
-    # print(model.summary())
-    # model.compile(loss='categorical_crossentropy',optimizer='adam', metrics=['accuracy'])
-    # return model
 
 model = baseline_model()
 
@@ -85,8 +70,8 @@ start = timer()
 
 history = model.fit(X_train,
                     Y_train,
-                    batch_size=128,
-                    epochs=100,
+                    batch_size=64,
+                    epochs=1000,
                     validation_split=0.2,
                     verbose=2)
                     
@@ -98,8 +83,8 @@ history_dict.keys()
 
 loss_values = history_dict['loss']
 val_loss_values = history_dict['val_loss']
-loss_values50 = loss_values[0:150]
-val_loss_values50 = val_loss_values[0:150]
+loss_values50 = loss_values[0:500]
+val_loss_values50 = val_loss_values[0:500]
 epochs = range(1, len(loss_values50) + 1)
 plt.plot(epochs, loss_values50, 'b',color = 'blue', label='Training loss')
 plt.plot(epochs, val_loss_values50, 'b',color='red', label='Validation loss')
@@ -134,11 +119,11 @@ plt.show()
 mae = history_dict['accuracy']  #这里改成mae
 vmae = history_dict['val_accuracy']  #对应这里就要改成val_mae
 epochs = range(1, len(mae) + 1)
-plt.plot(epochs, mae, 'b',color = 'blue', label='Training error')
-plt.plot(epochs, vmae, 'b',color='red', label='Validation error')
-plt.title('Training and validation error')
+plt.plot(epochs, mae, 'b',color = 'blue', label='accuracy')
+plt.plot(epochs, vmae, 'b',color='red', label='val_accuracy')
+plt.title('Training and validation accuracy')
 plt.xlabel('Epochs')
-plt.ylabel('Error')
+plt.ylabel('accuracy')
 plt.legend()
 plt.xticks(epochs)
 fig = plt.gcf()
@@ -192,7 +177,7 @@ plt.xlabel('No. of Trading Days')
 plt.ylabel('Close Value (scaled)')
 plt.legend(loc='upper left')
 fig = plt.gcf()
-fig.set_size_inches(20,10)
+fig.set_size_inches(15,7)
 #fig.savefig('img/tcstraincnn.png', dpi=300)
 plt.show()
 
@@ -220,7 +205,7 @@ plt.plot(x,P[test_bound:data_size],color = 'green',label ='prediction on testing
 plt.plot(Y,color='blue', label='Y')
 plt.legend(loc='upper left')
 fig = plt.gcf()
-fig.set_size_inches(20,12)
+fig.set_size_inches(15,7)
 plt.show()
 
 loss_and_metrics = model.evaluate(X_test, Y_test, batch_size=64)
