@@ -15,13 +15,17 @@ import itertools
 from scikeras.wrappers import KerasClassifier
 import math
 from matplotlib.pyplot import MultipleLocator
+import keras.backend as K
+from keras.callbacks import LearningRateScheduler
+from keras import optimizers
 # feature_size = 246
 feature_size = 5
 
 
 # 载入数据
 # df = pd.read_csv("数据集-用做分类.csv")
-df = pd.read_csv("data.csv")   #读取时默认把第一行当做属性
+# df = pd.read_csv("data_com.csv")   #读取时默认把第一行当做属性
+df = pd.read_csv("data_pos.csv")   #读取时默认把第一行当做属性
 print("df_size : ",len(df))
 X = np.expand_dims(df.values[:, :-1].astype(float), axis=2)
 Y = df.values[:, feature_size]
@@ -56,7 +60,8 @@ def baseline_model():
     model.add(Dense(5, activation='softmax'))
     plot_model(model, to_file='./model_classifier.png', show_shapes=True)
     print(model.summary())
-    model.compile(loss='categorical_crossentropy',optimizer='adam', metrics=['accuracy'])
+    adam = optimizers.Adam(lr=0.0004)
+    model.compile(loss='categorical_crossentropy',optimizer=adam, metrics=['accuracy'])
     return model
 
 model = baseline_model()
@@ -68,10 +73,20 @@ print(model.summary())
 from timeit import default_timer as timer
 start = timer()
 
+# def scheduler(epoch):
+#     # 每隔100个epoch，学习率减小为原来的1/10
+#     if epoch % 100 == 0 and epoch != 0:
+#         lr = K.get_value(model.optimizer.lr)
+#         K.set_value(model.optimizer.lr, lr * 0.5)
+#         print("lr changed to {}".format(lr * 0.5))
+#     return K.get_value(model.optimizer.lr)
+ 
+# reduce_lr = LearningRateScheduler(scheduler)
+
 history = model.fit(X_train,
                     Y_train,
-                    batch_size=64,
-                    epochs=1000,
+                    batch_size=16,
+                    epochs=400,
                     validation_split=0.2,
                     verbose=2)
                     
@@ -83,8 +98,8 @@ history_dict.keys()
 
 loss_values = history_dict['loss']
 val_loss_values = history_dict['val_loss']
-loss_values50 = loss_values[0:500]
-val_loss_values50 = val_loss_values[0:500]
+loss_values50 = loss_values[0:1000]
+val_loss_values50 = val_loss_values[0:1000]
 epochs = range(1, len(loss_values50) + 1)
 plt.plot(epochs, loss_values50, 'b',color = 'blue', label='Training loss')
 plt.plot(epochs, val_loss_values50, 'b',color='red', label='Validation loss')
@@ -98,7 +113,7 @@ fig = plt.gcf()
 fig.set_size_inches(15,7)
 
 
-x_major_locator=MultipleLocator(10)
+x_major_locator=MultipleLocator(50)
 #把x轴的刻度间隔设置为1，并存在变量里
 # y_major_locator=MultipleLocator()
 #把y轴的刻度间隔设置为10，并存在变量里
@@ -128,7 +143,7 @@ plt.legend()
 plt.xticks(epochs)
 fig = plt.gcf()
 fig.set_size_inches(15,7)  #设置图像大小
-x_major_locator=MultipleLocator(10)
+x_major_locator=MultipleLocator(50)
 #把x轴的刻度间隔设置为1，并存在变量里
 # y_major_locator=MultipleLocator()
 #把y轴的刻度间隔设置为10，并存在变量里
@@ -212,7 +227,7 @@ loss_and_metrics = model.evaluate(X_test, Y_test, batch_size=64)
 print('## evaluation loss and metrics ##')
 print(loss_and_metrics)
 
-
+#这里可以 根据之前的文件  加上一个predict模块  测试下效果
 
 
 
