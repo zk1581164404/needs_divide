@@ -18,6 +18,9 @@ from matplotlib.pyplot import MultipleLocator
 import keras.backend as K
 from keras.callbacks import LearningRateScheduler
 from keras import optimizers
+from sklearn.metrics import ConfusionMatrixDisplay
+plt.rcParams["font.sans-serif"] = ["SimHei"]  # 设置字体
+plt.rcParams["axes.unicode_minus"] = False  # 正常显示负号
 # feature_size = 246
 feature_size = 5
 
@@ -81,8 +84,8 @@ start = timer()
 
 history = model.fit(X_train,
                     Y_train,
-                    batch_size=16,
-                    epochs=500,
+                    batch_size=8,
+                    epochs=300,
                     validation_split=0.2,
                     verbose=2)
                     
@@ -156,15 +159,15 @@ testScore = model.evaluate(X_test, Y_test, verbose=0)
 p = model.predict(X_test)
 
 # 画出真实值和测试集的预测值之间的误差图像
-plt.plot(np.argmax(p, axis=1),color='red', label='prediction')
-plt.plot(np.argmax(Y_test, axis=1),color='blue', label='y_test')
+plt.plot(np.argmax(p, axis=1) + 1,color='red', label='prediction')   #加一是为了表现1-5 而不是0-4
+plt.plot(np.argmax(Y_test, axis=1) + 1,color='blue', label='y_test')
 # print("Y_test : ",np.argmax(Y_test, axis=1))
 # print("p : ",np.argmax(p, axis=1))
 plt.xlabel('No. of Data')
 plt.ylabel('Communication Needs Grading Results')
 plt.legend(loc='upper left')
 fig = plt.gcf()
-fig.set_size_inches(15, 5)
+fig.set_size_inches(15, 7)
 x_major_locator=MultipleLocator(20)
 #把x轴的刻度间隔设置为1，并存在变量里
 # y_major_locator=MultipleLocator()
@@ -177,12 +180,12 @@ plt.show()
 p1= model.predict(X_train)
 print("p1.size == ",len(p1))
 #验证集相关  这里都改成超参数吧
-plt.plot(np.argmax(p1[:valid_bound],1),color='red', label='prediction on training samples')
+plt.plot(np.argmax(p1[:valid_bound],1) + 1,color='red', label='prediction on training samples')
 # x = np.array(range(848,1060))
 x = np.array(range(valid_bound,test_bound))   #数据集的数据维度  需要自己更改一下
 
-plt.plot(x,np.argmax(p1[valid_bound:test_bound],1),color = 'magenta',label ='prediction on validating samples')
-plt.plot(np.argmax(Y_train,1),color='blue', label='Y_train')
+plt.plot(x,np.argmax(p1[valid_bound:test_bound],1) + 1,color = 'magenta',label ='prediction on validating samples')
+plt.plot(np.argmax(Y_train,1) + 1,color='blue', label='Y_train')
 
 plt.xlabel('No. of Data')
 plt.ylabel('Communication Needs Grading Results')
@@ -204,16 +207,16 @@ Y = np.concatenate((np.argmax(Y_train,1),np.argmax(Y_test,1)),axis = 0)
 P = np.concatenate((np.argmax(p1,1),np.argmax(p,1)),axis = 0)
 #plotting the complete Y set with predicted values on x_train and x_test(variable p1 & p respectively given above)
 #for 
-plt.plot(P[:test_bound],color='red', label='prediction on training samples')
+plt.plot(P[:test_bound] + 1,color='red', label='prediction on training samples')
 #for validating samples
 z = np.array(range(valid_bound,test_bound))
-plt.plot(z,P[valid_bound:test_bound],color = 'black',label ='prediction on validating samples')
+plt.plot(z,P[valid_bound:test_bound] + 1,color = 'black',label ='prediction on validating samples')
 # #for testing samples
 x = np.array(range(test_bound,data_size))
-plt.plot(x,P[test_bound:data_size],color = 'green',label ='prediction on testing samples(x_test)')
+plt.plot(x,P[test_bound:data_size] + 1,color = 'green',label ='prediction on testing samples(x_test)')
 
 
-plt.plot(Y,color='blue', label='Y')
+plt.plot(Y + 1,color='blue', label='Y')
 plt.legend(loc='upper left')
 fig = plt.gcf()
 fig.set_size_inches(15,7)
@@ -224,19 +227,6 @@ print('## evaluation loss and metrics ##')
 print(loss_and_metrics)
 
 #这里可以 根据之前的文件  加上一个predict模块  测试下效果
-
-
-
-
-
-
-
-
-
-
-
-
-
 # estimator = KerasClassifier(build_fn=baseline_model, epochs=40, batch_size=128, verbose=1)
 # estimator.fit(X_train, Y_train)
  
@@ -257,23 +247,27 @@ print(loss_and_metrics)
 #     plt.show()
  
 # 混淆矩阵定义
-# def plot_confusion_matrix(cm, classes,title='Confusion matrix',cmap=plt.cm.jet):
-#     cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-#     plt.imshow(cm, interpolation='nearest', cmap=cmap)
-#     plt.rcParams['font.sans-serif'] = ['SimHei']  # 用来正常显示中文标签
-#     plt.rcParams['axes.unicode_minus'] = False  # 用来正常显示负号
-#     plt.colorbar()
-#     tick_marks = np.arange(len(classes))
-#     plt.xticks(tick_marks,('0%','3%','5%','8%','10%','12%','15%','18%','20%','25%'))
-#     plt.yticks(tick_marks,('0%','3%','5%','8%','10%','12%','15%','18%','20%','25%'))
-#     thresh = cm.max() / 2.
-#     for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
-#         plt.text(j, i, '{:.2f}'.format(cm[i, j]), horizontalalignment="center",color="white" if cm[i, j] > thresh else "black")
-#     plt.tight_layout()
-#     plt.ylabel('真实类别')
-#     plt.xlabel('预测类别')
-#     plt.savefig('test_xx.png', dpi=200, bbox_inches='tight', transparent=False)
-#     plt.show()
+def plot_confusion_matrix(cm, classes,title='Confusion matrix',cmap='Blues'):
+    accuracy = np.trace(cm) / float(np.sum(cm))
+    misclass = 1 - accuracy
+    cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+    plt.imshow(cm, interpolation='nearest', cmap=cmap)
+    plt.colorbar()
+    tick_marks = np.arange(len(classes))
+    plt.xticks(tick_marks,('P1','P2','P3','P4','P5'))
+    plt.xticks(fontsize=14)
+    # plt.yticks(tick_marks,('Priority1','Priority2','Priority3','Priority4','Priority5'))
+    plt.yticks(tick_marks,('P1','P2','P3','P4','P5'))
+    plt.yticks(fontsize=14)
+    thresh = cm.max() / 2.
+    for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
+        plt.text(j, i, '{:.2f}'.format(cm[i, j]), horizontalalignment="center",color="white" if cm[i, j] > thresh else "black")
+    plt.tight_layout()
+    plt.ylabel('预测通信需求等级',size=15)
+    # plt.xlabel('true')
+    plt.xlabel('实际通信需求等级\nLoss={:0.4f};Accuracy={:0.4f};Misclass={:0.4f}'.format(loss_and_metrics[0],accuracy, misclass),size=15)
+    plt.savefig('Confusion_Matrix_com.png', dpi=200, bbox_inches='tight', transparent=False)
+    plt.show()
 
 
 # seed = 42
@@ -283,12 +277,13 @@ print(loss_and_metrics)
 # print("Accuracy of cross validation, mean %.2f, std %.2f\n" % (result.mean(), result.std()))
  
 # # 显示混淆矩阵
-# def plot_confuse(model, x_val, y_val):
-#     predictions = model.predict_classes(x_val)
-#     truelabel = y_val.argmax(axis=-1)   # 将one-hot转化为label
-#     conf_mat = confusion_matrix(y_true=truelabel, y_pred=predictions)
-#     plt.figure()
-#     plot_confusion_matrix(conf_mat, range(np.max(truelabel)+1))
+def plot_confuse(model, x_val, y_val):
+    predicted = model.predict(x_val)
+    predictions = np.argmax(predicted,axis=1)
+    truelabel = y_val.argmax(axis=-1)   # 将one-hot转化为label
+    conf_mat = confusion_matrix(y_true=truelabel, y_pred=predictions)
+    plt.figure()
+    plot_confusion_matrix(conf_mat, range(np.max(truelabel)+1))
  
 # # 将其模型转换为json
 # model_json = estimator.model.to_json()
@@ -309,11 +304,11 @@ print(loss_and_metrics)
 # scores = loaded_model.evaluate(X_test, Y_test, verbose=0)
 # print('%s: %.2f%%' % (loaded_model.metrics_names[1], scores[1] * 100))
 # # 输出预测类别
-# predicted = loaded_model.predict(X)
-# predicted_label = loaded_model.predict_classes(X)
-# print("predicted label:\n " + str(predicted_label))
+predicted = model.predict(X)
+predicted_label = np.argmax(predicted,axis=1)
+print("predicted label:\n " + str(predicted_label))
 # #显示混淆矩阵
-# plot_confuse(estimator.model, X_test, Y_test)
+plot_confuse(model, X_test, Y_test)
  
 # # 可视化卷积层
 # # visual(estimator.model, X_train, 1)
